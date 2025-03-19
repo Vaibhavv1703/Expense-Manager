@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,11 +8,29 @@
     <link rel="stylesheet" href="styles.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <!-- Chart.js -->
 </head>
+
 <body>
+    <!-- Set Limit Button -->
     <header>
         <h2>Expense Manager</h2>
-        <button id="openPopup">+ Add Expense</button>
+        <div>
+            <button id="setLimitBtn">Set Limit</button>
+            <button id="openPopup">+ Add Expense</button>
+        </div>
     </header>
+
+    <!-- Set Limit Popup -->
+    <div id="limitPopup" class="popup">
+        <div class="popup-content">
+            <span class="close closeLimit">&times;</span>
+            <h3>Set Category Limits</h3>
+            <select id="limitCategoryDropdown">
+                <option value="">Select a Category</option>
+            </select>
+            <input type="number" id="categoryLimit" placeholder="Enter Limit Amount">
+            <button onclick="setCategoryLimit()">Save Limit</button>
+        </div>
+    </div>
 
     <div class="main-container">
         <!-- Expense Table -->
@@ -30,11 +49,14 @@
             </table>
         </div>
 
-        <!-- Pie Chart -->
+        <!-- Pie Chart + Warning -->
         <div class="chart-container">
             <canvas id="expenseChart"></canvas>
+            <p id="limitWarning" class="limit-warning" style="display: none;"></p>
         </div>
+
     </div>
+
 
     <!-- Popup Form -->
     <div id="expensePopup" class="popup">
@@ -51,4 +73,5 @@
 
     <script src="script.js"></script>
 </body>
+
 </html>

@@ -1,10 +1,87 @@
 let expenseChart; // Global chart variable
 
+let categoryLimits = {}; // Store limits for different categories
+
+document.getElementById('setLimitBtn').addEventListener('click', () => {
+    populateCategoryDropdown();
+    document.getElementById('limitPopup').style.display = "block";
+});
+
+document.querySelector('.closeLimit').addEventListener('click', () => {
+    document.getElementById('limitPopup').style.display = "none";
+});
+
+// Function to populate category dropdown dynamically
+function populateCategoryDropdown() {
+    const dropdown = document.getElementById('limitCategoryDropdown');
+    dropdown.innerHTML = `<option value="">Select a Category</option>`;
+
+    const categories = new Set();
+    document.querySelectorAll('#expenseTable tr td:first-child').forEach(td => {
+        categories.add(td.textContent);
+    });
+
+    categories.forEach(category => {
+        dropdown.innerHTML += `<option value="${category}">${category}</option>`;
+    });
+}
+
+// Function to set category-specific expense limits
+function setCategoryLimit() {
+    const category = document.getElementById('limitCategoryDropdown').value;
+    const limit = document.getElementById('categoryLimit').value;
+
+    if (!category) {
+        alert("Please select a category!");
+        return;
+    }
+    if (!limit || limit <= 0) {
+        alert("Please enter a valid limit!");
+        return;
+    }
+
+    categoryLimits[category] = parseFloat(limit);
+    document.getElementById('limitPopup').style.display = "none";
+    checkCategoryLimits();
+}
+
+// Function to check if expenses exceed category-specific limits
+function checkCategoryLimits() {
+    let warnings = [];
+    const categoryTotals = {};
+
+    // Calculate total spent per category
+    document.querySelectorAll('#expenseTable tr').forEach(row => {
+        const cells = row.getElementsByTagName('td');
+        if (cells.length > 1) {
+            const category = cells[0].textContent;
+            const amount = parseFloat(cells[1].textContent);
+            categoryTotals[category] = (categoryTotals[category] || 0) + amount;
+        }
+    });
+
+    // Compare totals with limits
+    for (let category in categoryLimits) {
+        if (categoryTotals[category] > categoryLimits[category]) {
+            warnings.push(`⚠ Limit exceeded for ${category}! (Limit: ${categoryLimits[category]}, Spent: ${categoryTotals[category]})`);
+        }
+    }
+
+    // Display warning inside the chart container (below chart)
+    const warningElement = document.getElementById('limitWarning');
+    if (warnings.length > 0) {
+        warningElement.innerHTML = warnings.join('<br>');
+        warningElement.style.display = "block";
+    } else {
+        warningElement.style.display = "none";
+    }
+}
+
+// Modify fetchExpenses() to check category limits after loading expenses
 async function fetchExpenses() {
     const res = await fetch('/expenses');
     const data = await res.json();
 
-    // Update table with Delete & Repeat buttons
     document.getElementById('expenseTable').innerHTML = data.map(e => 
         `<tr>
             <td>${e.category}</td>
@@ -19,6 +96,7 @@ async function fetchExpenses() {
     ).join('');
 
     updateChart(data);
+    checkCategoryLimits(); // Check category limits after fetching expenses
 }
 
 // Function to repeat expense (copy values, set current date)
@@ -34,7 +112,6 @@ function repeatExpense(category, amount, payer) {
     // Show popup
     document.getElementById('expensePopup').style.display = "block";
 }
-
 
 function formatDateToDDMMYYYY(inputDate) {
     const dateObj = new Date(inputDate);
