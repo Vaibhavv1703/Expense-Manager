@@ -4,27 +4,65 @@ async function fetchExpenses() {
     const res = await fetch('/expenses');
     const data = await res.json();
 
-    // Update Table
+    // Update table with Delete & Repeat buttons
     document.getElementById('expenseTable').innerHTML = data.map(e => 
         `<tr>
             <td>${e.category}</td>
             <td>${e.amount}</td>
             <td>${e.payer}</td>
             <td>${e.date}</td>
-            <td><button onclick="deleteExpense(${e.id})">Delete</button></td>
+            <td>
+                <button onclick="deleteExpense(${e.id})">Delete</button>
+                <button onclick="repeatExpense('${e.category}', '${e.amount}', '${e.payer}')">Repeat</button>
+            </td>
         </tr>`
     ).join('');
 
-    // Update Pie Chart
     updateChart(data);
+}
+
+// Function to repeat expense (copy values, set current date)
+function repeatExpense(category, amount, payer) {
+    document.getElementById('category').value = category;
+    document.getElementById('amount').value = amount;
+    document.getElementById('payer').value = payer;
+
+    // Set today's date
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('date').value = today;
+
+    // Show popup
+    document.getElementById('expensePopup').style.display = "block";
+}
+
+
+function formatDateToDDMMYYYY(inputDate) {
+    const dateObj = new Date(inputDate);
+    const day = String(dateObj.getDate()).padStart(2, '0');
+    const month = String(dateObj.getMonth() + 1).padStart(2, '0'); // Months are 0-based
+    const year = dateObj.getFullYear();
+    return `${day}-${month}-${year}`;
 }
 
 async function addExpense() {
     const category = document.getElementById('category').value;
     const amount = document.getElementById('amount').value;
     const payer = document.getElementById('payer').value;
-    const date = document.getElementById('date').value;
-    
+    let date = document.getElementById('date').value;
+
+    // Validation: Amount is required
+    if (!amount || amount <= 0) {
+        alert("Please enter a valid amount!");
+        return;
+    }
+
+    // Format date
+    if (!date) {
+        date = formatDateToDDMMYYYY(new Date()); // Use current date if empty
+    } else {
+        date = formatDateToDDMMYYYY(date); // Convert user input to dd-mm-yyyy
+    }
+
     await fetch('/add-expense', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -34,6 +72,12 @@ async function addExpense() {
     closePopup();
     fetchExpenses();
 }
+
+// Show current date in popup by default
+document.addEventListener("DOMContentLoaded", () => {
+    const today = new Date().toISOString().split('T')[0]; // Format: yyyy-mm-dd
+    document.getElementById('date').value = today;
+});
 
 async function deleteExpense(id) {
     await fetch(`/delete-expense/${id}`, { method: 'DELETE' });

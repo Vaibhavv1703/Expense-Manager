@@ -31,21 +31,28 @@ db.run(`CREATE TABLE IF NOT EXISTS expenses (
 app.post('/add-expense', (req, res) => {
     let { category, amount, payer, date } = req.body;
 
+    // Validation: Amount is required
     if (!amount || amount <= 0) {
         return res.status(400).json({ error: "Amount is required and must be greater than zero." });
     }
 
+    // Apply default values
     category = category && category.trim() ? category : "Unknown";
     date = date ? date : new Date().toISOString().split('T')[0];
 
+    // Convert date to dd-mm-yyyy format
+    const dateObj = new Date(date);
+    const formattedDate = `${String(dateObj.getDate()).padStart(2, '0')}-${String(dateObj.getMonth() + 1).padStart(2, '0')}-${dateObj.getFullYear()}`;
+
     db.run(`INSERT INTO expenses (category, amount, payer, date) VALUES (?, ?, ?, ?)`,
-        [category, amount, payer, date],
+        [category, amount, payer, formattedDate],
         function (err) {
             if (err) return res.status(500).json({ error: err.message });
-            res.json({ id: this.lastID, category, amount, payer, date });
+            res.json({ id: this.lastID, category, amount, payer, date: formattedDate });
         }
     );
 });
+
 
 // API to fetch all expenses
 app.get('/expenses', (req, res) => {
