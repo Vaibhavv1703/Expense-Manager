@@ -40,15 +40,11 @@ app.post('/add-expense', (req, res) => {
     category = category && category.trim() ? category : "Unknown";
     date = date ? date : new Date().toISOString().split('T')[0];
 
-    // Convert date to dd-mm-yyyy format
-    const dateObj = new Date(date);
-    const formattedDate = `${String(dateObj.getDate()).padStart(2, '0')}-${String(dateObj.getMonth() + 1).padStart(2, '0')}-${dateObj.getFullYear()}`;
-
     db.run(`INSERT INTO expenses (category, amount, payer, date) VALUES (?, ?, ?, ?)`,
-        [category, amount, payer, formattedDate],
+        [category, amount, payer, date],
         function (err) {
             if (err) return res.status(500).json({ error: err.message });
-            res.json({ id: this.lastID, category, amount, payer, date: formattedDate });
+            res.json({ id: this.lastID, category, amount, payer, date });
         }
     );
 });

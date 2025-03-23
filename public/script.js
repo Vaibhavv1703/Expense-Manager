@@ -113,14 +113,6 @@ function repeatExpense(category, amount, payer) {
     document.getElementById('expensePopup').style.display = "block";
 }
 
-function formatDateToDDMMYYYY(inputDate) {
-    const dateObj = new Date(inputDate);
-    const day = String(dateObj.getDate()).padStart(2, '0');
-    const month = String(dateObj.getMonth() + 1).padStart(2, '0'); // Months are 0-based
-    const year = dateObj.getFullYear();
-    return `${day}-${month}-${year}`;
-}
-
 async function addExpense() {
     const category = document.getElementById('category').value;
     const amount = document.getElementById('amount').value;
@@ -132,13 +124,7 @@ async function addExpense() {
         alert("Please enter a valid amount!");
         return;
     }
-
-    // Format date
-    if (!date) {
-        date = formatDateToDDMMYYYY(new Date()); // Use current date if empty
-    } else {
-        date = formatDateToDDMMYYYY(date); // Convert user input to dd-mm-yyyy
-    }
+    if(!date)   date = new Date();
 
     await fetch('/add-expense', {
         method: 'POST',
